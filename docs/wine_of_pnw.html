@@ -9,7 +9,7 @@
 <meta name="author" content="Jacob Plax">
 <meta name="dcterms.date" content="2025-01-27">
 
-<title>1&nbsp; Wines of the PNW – Data 505</title>
+<title>1&nbsp; HW1:Wines of the PNW – Data 505</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./wine_of_pnw.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Wines of the PNW</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./wine_of_pnw.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">HW1:Wines of the PNW</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -150,7 +150,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./wine_of_pnw.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Wines of the PNW</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">HW1:Wines of the PNW</span></span></a>
   </div>
 </li>
     </ul>
@@ -187,7 +187,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Wines of the PNW</span></h1>
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">HW1:Wines of the PNW</span></h1>
 </div>
 
 
@@ -220,12 +220,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This is a technical blog post of <strong>both</strong> an HTML file <em>and</em> <a href="src/wine_of_pnw.qmd">.qmd file</a> hosted on GitHub pages.</p>
 <section id="setup" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Setup</h1>
-<ol type="1">
-<li>Change the author of this RMD file to be yourself and delete this line.</li>
-<li>Modify if necessary the below code so that you can successfully load <code>wine.rds</code> then delete this line.</li>
-<li>In the space provided after the R chunk, explain what thecode is doing (line by line) then delete this line.</li>
-<li>Get your <a href="https://docs.github.com/en/pages/quickstart">GitHub Pages</a> ready.</li>
-</ol>
 <p><strong>Step Up Code:</strong></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -252,6 +246,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Loads the tidyverse Library</li>
 <li>Read in the data and save it in the wine dataframe</li>
 <li>Filter the data to only include points where the province is Oregon, California, or New York.</li>
+<li>Check if the desription contains the word cherry</li>
 <li>Add a new column to the dataset called lprice that is the log of the existing price column.</li>
 <li>Select only the columns lprice, points, cherry, and province to include in the dataset</li>
 </ol>

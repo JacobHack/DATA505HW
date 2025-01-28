@@ -4,7 +4,7 @@
     "href": "index.html",
     "title": "Data 505",
     "section": "",
-    "text": "Preface\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books.",
+    "text": "Preface\nThis is a Quarto book of Jacob Plax’s Work in Data 505: Applied Machine Learning",
     "crumbs": [
       "Preface"
     ]
@@ -12,71 +12,71 @@
   {
     "objectID": "wine_of_pnw.html",
     "href": "wine_of_pnw.html",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "",
     "text": "2 Setup\nAbstract:\nThis is a technical blog post of both an HTML file and .qmd file hosted on GitHub pages.\nStep Up Code:\nlibrary(tidyverse) \n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.5\n✔ forcats   1.0.0     ✔ stringr   1.5.1\n✔ ggplot2   3.5.1     ✔ tibble    3.2.1\n✔ lubridate 1.9.3     ✔ tidyr     1.3.1\n✔ purrr     1.0.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\nwine &lt;- readRDS(gzcon(url(\"https://github.com/cd-public/DSLM-505/raw/master/dat/wine.rds\"))) %&gt;%\n  filter(province==\"Oregon\" | province==\"California\" | province==\"New York\") %&gt;% \n  mutate(cherry=as.integer(str_detect(description,\"[Cc]herry\"))) %&gt;% \n  mutate(lprice=log(price)) %&gt;% \n  select(lprice, points, cherry, province)\nExplanataion:",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   },
   {
     "objectID": "wine_of_pnw.html#linear-models",
     "href": "wine_of_pnw.html#linear-models",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "3.1 Linear Models",
     "text": "3.1 Linear Models\nFirst run a linear regression model with log of price as the dependent variable and ‘points’ and ‘cherry’ as features (variables).\n\nm1 &lt;- lm(lprice ~ points + cherry, data = wine)\npredictions &lt;- predict(m1, wine)\nresiduals &lt;- wine$lprice - predictions\nrmse &lt;- sqrt(mean(residuals^2))\nrmse\n\n[1] 0.4687657\n\n\nExplanataion:\n\nCreates a linear regression model where lprice is the dependent variable and points and cherry are the independent variables. Essentially we are predicting the lprice using points and cherry.\nWe use the predict function to generate predictions from the linear model m1 using the wine dataset.\nCalculate the residuals by subtracting the predicted values from the actual log prices.\nCompute the Root Mean Squared Error (RMSE) to evaluate the model’s performance.\n\nRMSE: The RMSE measures how effective our model is. A lower RMSE indicates a better fit of the model to the data, meaning the predictions are closer to the actual values. In this case, the RMSE value is 0.4687657, which suggests how well our model is performing.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   },
   {
     "objectID": "wine_of_pnw.html#interaction-models",
     "href": "wine_of_pnw.html#interaction-models",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "3.2 Interaction Models",
     "text": "3.2 Interaction Models\nAdd an interaction between ‘points’ and ‘cherry’.\n\nm2 &lt;- lm(lprice ~ points * cherry, data = wine)\npredictions2 &lt;- predict(m2, wine)\nresiduals2 &lt;- wine$lprice - predictions2\nrmse2 &lt;- sqrt(mean(residuals2^2))\nrmse2\n\n[1] 0.4685223\n\n\n\nCreates a linear regression model where lprice is the dependent variable and points, cherry, and their interaction (points * cherry) are the independent variables. Essentially we are predicting the lprice using points, cherry, and their interaction (points * cherry).\nWe use the predict function to generate predictions from the linear model m2 using the wine dataset.\nCalculate the residuals by subtracting the predicted values from the actual log prices.\nCompute the Root Mean Squared Error (RMSE) to evaluate the model’s performance.\n\nRMSE: The RMSE measures how effective our model is. A lower RMSE indicates a better fit of the model to the data, meaning the predictions are closer to the actual values. In this case, the RMSE value is 0.4685223, which suggests how well our model is performing.\n\n3.2.1 The Interaction Variable\n\nsummary(m2)\n\n\nCall:\nlm(formula = lprice ~ points * cherry, data = wine)\n\nResiduals:\n    Min      1Q  Median      3Q     Max \n-1.6432 -0.3332 -0.0151  0.2924  3.9645 \n\nCoefficients:\n               Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)   -5.659620   0.102252 -55.350  &lt; 2e-16 ***\npoints         0.102225   0.001149  88.981  &lt; 2e-16 ***\ncherry        -1.014896   0.215812  -4.703 2.58e-06 ***\npoints:cherry  0.012663   0.002409   5.256 1.48e-07 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 0.4686 on 26580 degrees of freedom\nMultiple R-squared:  0.3062,    Adjusted R-squared:  0.3061 \nF-statistic:  3910 on 3 and 26580 DF,  p-value: &lt; 2.2e-16\n\n\nThe coefficient of the interaction term (points:cherry) is positive, indicating that the effect of points on the log of price increases when the wine description contains the word “cherry”. This suggests that wines described with “cherry” tend to have a higher price for the same number of points compared to those without the “cherry” description.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   },
   {
     "objectID": "wine_of_pnw.html#applications",
     "href": "wine_of_pnw.html#applications",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "3.3 Applications",
     "text": "3.3 Applications\nDetermine which province (Oregon, California, or New York), does the ‘cherry’ feature in the data affect price most?\n\nwine_oregon &lt;- wine %&gt;% filter(province == \"Oregon\")\nwine_california &lt;- wine %&gt;% filter(province == \"California\")\nwine_newyork &lt;- wine %&gt;% filter(province == \"New York\")\n\nmodel_oregon &lt;- lm(lprice ~ points + cherry, data = wine_oregon)\nmodel_california &lt;- lm(lprice ~ points + cherry, data = wine_california)\nmodel_newyork &lt;- lm(lprice ~ points + cherry, data = wine_newyork)\n\nsummary_oregon &lt;- summary(model_oregon)\nsummary_california &lt;- summary(model_california)\nsummary_newyork &lt;- summary(model_newyork)\n\ncoef_oregon &lt;- summary_oregon$coefficients[\"cherry\", \"Estimate\"]\ncoef_california &lt;- summary_california$coefficients[\"cherry\", \"Estimate\"]\ncoef_newyork &lt;- summary_newyork$coefficients[\"cherry\", \"Estimate\"]\n\ncoef_oregon\n\n[1] 0.2203241\n\ncoef_california\n\n[1] 0.09566567\n\ncoef_newyork\n\n[1] 0.1517924\n\n\n\nWe create 3 subsets of the data for the 3 provinces.\nWe perform a linear regression model on all 3 sets of data.\nWe get the coefficents from the summary function.\nThe higher the coefficient the more important the cherry feature is.\n\nThe coefficients for the ‘cherry’ feature in each province are as follows:\n\nOregon: 0.2203241\nCalifornia: 0.0956657\nNew York: 0.1517924\n\nThe ‘cherry’ feature has the highest positive effect on the log of price in Oregon. This suggests that in this province, wines described with “cherry” tend to have a higher price compared to those without the “cherry” description.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   },
   {
     "objectID": "wine_of_pnw.html#on-accuracy",
     "href": "wine_of_pnw.html#on-accuracy",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "4.1 On Accuracy",
     "text": "4.1 On Accuracy\nImagine a model to distinguish New York wines from those in California and Oregon. After a few days of work, you take some measurements and note: “I’ve achieved 91% accuracy on my model!”\nShould you be impressed? Why or why not?\n\nprovince_counts &lt;- wine %&gt;%\n  count(province)\n\ntotal_count &lt;- sum(province_counts$n)\nbaseline_accuracy &lt;- max(province_counts$n) / total_count\n\nbaseline_accuracy\n\n[1] 0.7174616\n\nmodel_accuracy &lt;- 0.91\nmodel_accuracy &gt; baseline_accuracy\n\n[1] TRUE\n\n\nThe baseline accuracy is a little under 72% which is significantly lower than the 91% we are getting with our model. Therefore it is okay to be impressed by model since it is doing better than always predicating the most likely outcome.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   },
   {
     "objectID": "wine_of_pnw.html#on-ethics",
     "href": "wine_of_pnw.html#on-ethics",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "4.2 On Ethics",
     "text": "4.2 On Ethics\nWhy is understanding this vignette important to use machine learning in an ethical manner?\nIt’s important to undertsnad the context around our models. High accuracy doesn’t mean much if it isn’t actually that much better than the baseline accuracy. It’s important for us to be able to evaluate the quality of our models rather than just looking at things like RMSE and P Values and assuming our models are doing a great job without underestanding the context of the data we are using. In theory this will also lead to us creating more intersting and more effective models.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   },
   {
     "objectID": "wine_of_pnw.html#ignorance-is-no-excuse",
     "href": "wine_of_pnw.html#ignorance-is-no-excuse",
-    "title": "1  Wines of the PNW",
+    "title": "1  HW1:Wines of the PNW",
     "section": "4.3 Ignorance is no excuse",
     "text": "4.3 Ignorance is no excuse\nImagine you are working on a model to predict the likelihood that an individual loses their job as the result of the changing federal policy under new presidential administrations. You have a very large dataset with many hundreds of features, but you are worried that including indicators like age, income or gender might pose some ethical problems. When you discuss these concerns with your boss, she tells you to simply drop those features from the model. Does this solve the ethical issue? Why or why not?\nIt doesn’t solve the the ethical issues for a couple of reasons. First, there could be proxy variables in the dataset so even if we remove thing likes age, income, or gender we still might end up discriminating based on those things with other variables like zipcode for example. Second, even if those variables don’t have proxies we still might be descriminatory because in the past people have been discriminatory and our model learns from those human biases. Instead we might actually want to include those variables so that we can then so how much they are affecting the model and adjust it accordingly to be more fair than if we had just removed them.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Wines of the PNW</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>HW1:Wines of the PNW</span>"
     ]
   }
 ]
