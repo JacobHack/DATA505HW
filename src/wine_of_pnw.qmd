@@ -1,0 +1,160 @@
+---
+title: "HW1:Wines of the PNW"
+author: Jacob Plax
+date: "2025-01-27"
+---
+
+
+**Abstract:**
+
+This is a technical blog post of **both** an HTML file *and* [.qmd file](src/wine_of_pnw.qmd) hosted on GitHub pages.
+
+# Setup
+
+**Step Up Code:**
+```{r}
+library(tidyverse) 
+
+wine <- readRDS(gzcon(url("https://github.com/cd-public/DSLM-505/raw/master/dat/wine.rds"))) %>%
+  filter(province=="Oregon" | province=="California" | province=="New York") %>% 
+  mutate(cherry=as.integer(str_detect(description,"[Cc]herry"))) %>% 
+  mutate(lprice=log(price)) %>% 
+  select(lprice, points, cherry, province)
+```
+
+**Explanataion:**
+
+1. Loads the tidyverse Library
+2. Read in the data and save it in the wine dataframe
+3. Filter the data to only include points where the province is Oregon, California, or New York.
+4. Check if the desription contains the word cherry
+5. Add a new column to the dataset called lprice that is the log of the existing price column.
+6. Select only the columns lprice, points, cherry, and province to include in the dataset
+
+# Multiple Regression
+
+## Linear Models
+
+First run a linear regression model with log of price as the dependent variable and 'points' and 'cherry' as features (variables).
+
+```{r}
+m1 <- lm(lprice ~ points + cherry, data = wine)
+predictions <- predict(m1, wine)
+residuals <- wine$lprice - predictions
+rmse <- sqrt(mean(residuals^2))
+rmse
+
+```
+
+**Explanataion:**
+
+
+1. Creates a linear regression model where lprice is the dependent variable and points and cherry are the independent variables. Essentially we are predicting the lprice using points and cherry.
+2. We use the predict function to generate predictions from the linear model m1 using the wine dataset.
+3. Calculate the residuals by subtracting the predicted values from the actual log prices.
+4. Compute the Root Mean Squared Error (RMSE) to evaluate the model's performance.
+
+RMSE: The RMSE measures how effective our model is. A lower RMSE indicates a better fit of the model to the data, meaning the predictions are closer to the actual values. In this case, the RMSE value is `r rmse`, which suggests how well our model is performing.
+
+## Interaction Models
+
+Add an interaction between 'points' and 'cherry'. 
+
+```{r}
+m2 <- lm(lprice ~ points * cherry, data = wine)
+predictions2 <- predict(m2, wine)
+residuals2 <- wine$lprice - predictions2
+rmse2 <- sqrt(mean(residuals2^2))
+rmse2
+
+```
+
+
+1. Creates a linear regression model where lprice is the dependent variable and points, cherry, and their interaction (points * cherry) are the independent variables. Essentially we are predicting the lprice using points, cherry, and their interaction (points * cherry).
+2. We use the predict function to generate predictions from the linear model m2 using the wine dataset.
+3. Calculate the residuals by subtracting the predicted values from the actual log prices.
+4. Compute the Root Mean Squared Error (RMSE) to evaluate the model's performance.
+
+RMSE: The RMSE measures how effective our model is. A lower RMSE indicates a better fit of the model to the data, meaning the predictions are closer to the actual values. In this case, the RMSE value is `r rmse2`, which suggests how well our model is performing.
+
+### The Interaction Variable
+```{r}
+summary(m2)
+
+```
+
+The coefficient of the interaction term (points:cherry) is positive, indicating that the effect of points on the log of price increases when the wine description contains the word "cherry". This suggests that wines described with "cherry" tend to have a higher price for the same number of points compared to those without the "cherry" description.
+
+## Applications
+
+Determine which province (Oregon, California, or New York), does the 'cherry' feature in the data affect price most?
+
+```{r}
+wine_oregon <- wine %>% filter(province == "Oregon")
+wine_california <- wine %>% filter(province == "California")
+wine_newyork <- wine %>% filter(province == "New York")
+
+model_oregon <- lm(lprice ~ points + cherry, data = wine_oregon)
+model_california <- lm(lprice ~ points + cherry, data = wine_california)
+model_newyork <- lm(lprice ~ points + cherry, data = wine_newyork)
+
+summary_oregon <- summary(model_oregon)
+summary_california <- summary(model_california)
+summary_newyork <- summary(model_newyork)
+
+coef_oregon <- summary_oregon$coefficients["cherry", "Estimate"]
+coef_california <- summary_california$coefficients["cherry", "Estimate"]
+coef_newyork <- summary_newyork$coefficients["cherry", "Estimate"]
+
+coef_oregon
+coef_california
+coef_newyork
+```
+
+1. We create 3 subsets of the data for the 3 provinces.
+2. We perform a linear regression model on all 3 sets of data.
+3. We get the coefficents from the summary function.
+4. The higher the coefficient the more important the cherry feature is.
+
+
+The coefficients for the 'cherry' feature in each province are as follows:
+
+- Oregon: `r coef_oregon`
+- California: `r coef_california`
+- New York: `r coef_newyork`
+
+The 'cherry' feature has the highest positive effect on the log of price in `r ifelse(coef_california > coef_oregon & coef_california > coef_newyork, "California", ifelse(coef_oregon > coef_newyork, "Oregon", "New York"))`. This suggests that in this province, wines described with "cherry" tend to have a higher price compared to those without the "cherry" description.
+
+# Scenarios
+
+## On Accuracy
+
+Imagine a model to distinguish New York wines from those in California and Oregon. After a few days of work, you take some measurements and note: "I've achieved 91% accuracy on my model!" 
+
+Should you be impressed? Why or why not?
+
+```{r}
+province_counts <- wine %>%
+  count(province)
+
+total_count <- sum(province_counts$n)
+baseline_accuracy <- max(province_counts$n) / total_count
+
+baseline_accuracy
+
+model_accuracy <- 0.91
+model_accuracy > baseline_accuracy
+```
+
+The baseline accuracy is a little under 72% which is significantly lower than the 91% we are getting with our model. Therefore it is okay to be impressed by model since it is doing better than always predicating the most likely outcome.
+
+## On Ethics
+
+Why is understanding this vignette important to use machine learning in an ethical manner?
+
+It's important to undertsnad the context around our models. High accuracy doesn't mean much if it isn't actually that much better than the baseline accuracy. It's important for us to be able to evaluate the quality of our models rather than just looking at things like RMSE and P Values and assuming our models are doing a great job without underestanding the context of the data we are using. In theory this will also lead to us creating more intersting and more effective models. 
+
+## Ignorance is no excuse
+Imagine you are working on a model to predict the likelihood that an individual loses their job as the result of the changing federal policy under new presidential administrations. You have a very large dataset with many hundreds of features, but you are worried that including indicators like age, income or gender might pose some ethical problems. When you discuss these concerns with your boss, she tells you to simply drop those features from the model. Does this solve the ethical issue? Why or why not?
+
+It doesn't solve the the ethical issues for a couple of reasons. First, there could be proxy variables in the dataset so even if we remove thing likes age, income, or gender we still might end up discriminating based on those things with other variables like zipcode for example. Second, even if those variables don't have proxies we still might be descriminatory because in the past people have been discriminatory and our model learns from those human biases. Instead we might actually want to include those variables so that we can then so how much they are affecting the model and adjust it accordingly to be more fair than if we had just removed them. 

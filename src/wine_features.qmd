@@ -1,0 +1,103 @@
+---
+title: "HW2:Wine Features"
+author: Jacob Plax
+date: "2025-01-27"
+---
+
+
+
+**Abstract:**
+
+This is a technical blog post of **both** an HTML file *and* [.qmd file](src/wine_features.qmd) hosted on GitHub pages.
+
+# Setup
+
+
+
+**Step Up Code:**
+```{r}
+library(tidyverse)
+library(caret)
+library(fastDummies)
+wine <- readRDS(gzcon(url("https://github.com/cd-public/D505/raw/master/dat/wine.rds")))
+```
+
+
+
+
+# Feature Engineering
+
+We begin by engineering an number of features.
+
+1. Create a total of 10 features (including points). 
+2. Remove all rows with a missing value. 
+3. Ensure only log(price) and engineering features are the only columns that remain in the `wino` dataframe.
+
+```{r}
+wino <- wine %>% 
+  mutate(lprice=log(price)) %>%
+  mutate(country = fct_lump(country, 4)) %>%    
+  mutate(variety = fct_lump(variety, 4)) %>%                
+  select(lprice, points, country, variety) %>%
+  drop_na()
+head(wino)
+```
+
+
+**Explanataion:**
+
+1. We create a new column `lprice` which is the logarithm of the `price` column.
+2. We lump the `country` column into the top 4 most common countries and group the rest into "Other".
+3. We lump the `variety` column into the top 4 most common varieties and group the rest into "Other".
+4. We select only the `lprice`, `points`, `country`, and `variety` columns.
+5. We remove any rows that contain missing values.
+6. Finally, we display the first few rows of the resulting `wino` dataframe using the `head` function.
+
+
+# Caret
+
+We now use a train/test split to evaluate the features.
+
+1. Use the Caret library to partition the wino dataframe into an 80/20 split. 
+2. Run a linear regression with bootstrap resampling. 
+3. Report RMSE on the test partition of the data.
+
+```{r}
+set.seed(123)
+
+trainIndex <- createDataPartition(wino$lprice, p = 0.8, list = FALSE)
+wino_train <- wino[trainIndex, ]
+wino_test <- wino[-trainIndex, ]
+
+train_control <- trainControl(method = "boot", number = 100)
+model <- train(lprice ~ ., data = wino_train, method = "lm", trControl = train_control)
+
+predictions <- predict(model, wino_test)
+rmse <- sqrt(mean((wino_test$lprice - predictions)^2))
+rmse
+
+```
+
+**Explanation**
+
+1. We set a seed for reproducibility.
+2. We create a training index that partitions the `wino` dataframe into an 80/20 split.
+3. We create training and testing datasets using the partition index.
+4. We define the training control using bootstrap resampling with 100 iterations.
+5. We train a linear regression model using the training data and the defined training control.
+6. We make predictions on the test data using the trained model.
+7. We calculate the Root Mean Squared Error (RMSE) to evaluate the model's performance on the test data.
+
+
+# Variable selection
+
+We now graph the importance of your 10 features.
+
+```{r}
+plot(varImp(model, scale = FALSE))
+```
+
+**Explanation**
+
+1. We use the `varImp` function from the `caret` package to calculate the importance of each feature in the model.
+2. We plot the variable importance using the `plot` function, which helps us visualize the significance of each feature in predicting the target variable `lprice`.
