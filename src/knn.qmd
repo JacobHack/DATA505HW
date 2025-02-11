@@ -1,0 +1,196 @@
+---
+title: $K$NN
+author: "Jacob Plax"
+date: "02/10/2025"
+
+---
+
+**Abstract:**
+
+This is a technical blog post of **both** an HTML file *and* [.qmd file](https://raw.githubusercontent.com/cd-public/D505/refs/heads/master/hws/src/knn.qmd) hosted on GitHub pages.
+
+# 0. Quarto Type-setting
+
+- This document is rendered with Quarto, and configured to embed an images using the `embed-resources` option in the header.
+- If you wish to use a similar header, here's is the format specification for this document:
+
+```email
+format: 
+  html:
+    embed-resources: true
+```
+
+# 1. Setup
+
+```{r}
+library(tidyverse)
+library(caret)
+wine <- readRDS(gzcon(url("https://github.com/cd-public/D505/raw/master/dat/pinot.rds")))
+```
+
+
+## 2. $K$NN Concepts
+
+> The choice of \( K \) in a \( K \) Nearest Neighbors (KNN) algorithm significantly affects the quality of your predictions. 
+
+- **Small \( K \) values**: When \( K \) is small (e.g., \( K = 1 \)), the model is highly sensitive to noise in the training data. This can lead to overfitting, where the model performs well on the training data but poorly on unseen data.
+- **Large \( K \) values**: As \( K \) increases, the model becomes more generalized. It considers more neighbors, which can help smooth out noise but may also lead to underfitting, where the model is too simple to capture the underlying patterns in the data.
+- **Optimal \( K \)**: The optimal value of \( K \) balances bias and variance. It is typically determined through cross-validation, where different \( K \) values are tested, and the one that provides the best performance on validation data is chosen.
+
+In summary, the choice of \( K \) is crucial for the performance of the KNN algorithm. It requires careful tuning to achieve the best balance between overfitting and underfitting.
+
+## 3. Feature Engineering
+
+1. Create a version of the year column that is a *factor* (instead of numeric).
+2. Create dummy variables that indicate the presence of "cherry", "chocolate" and "earth" in the description.
+  - Take care to handle upper and lower case characters.
+3. Create 3 new features that represent the interaction between *time* and the cherry, chocolate and earth inidicators.
+4. Remove the description column from the data.
+
+```{r}
+wino <- wine %>%
+  mutate(year_f = as.factor(year)) %>%
+  mutate(description = tolower(description))
+
+wino <- wino %>% 
+  mutate(note_cherry = str_detect(description,"cherry")) %>% 
+  mutate(note_chocolate = str_detect(description,"chocolate")) %>%
+  mutate(note_earth = str_detect(description,"earth")) %>%
+  mutate(time_cherry = year*note_cherry)%>%
+  mutate(time_chocolate = year*note_chocolate)%>%
+  mutate(time_earth = year*note_earth)%>%
+  select(-description)
+```
+
+- We mutate the year column to create a new year factor column `year_f`
+- We create dummy variables for the presence of "cherry", "chocolate", and "earth" in the description.
+- We create interaction features between the year and the presence of these notes.
+- Finally, we remove the original description column.
+
+## 4. Preprocessing
+
+1. Preprocess the dataframe from the previous code block using BoxCox, centering and scaling of the numeric features
+2. Create dummy variables for the `year` factor column
+
+```{r}
+library(caret)
+library(fastDummies)
+
+wino <- wino %>% 
+  preProcess(method = c("BoxCox","center","scale")) %>% 
+  predict(wino)
+
+wino <- wino %>% dummy_cols(
+    select_columns = "year_f",
+    remove_most_frequent_dummy = T, 
+    remove_selected_columns = T)
+```
+
+- We load the `caret` and `fastDummies` packages
+- We preprocess the dataframe using BoxCox transformation, centering, and scaling of the numeric features.
+- We create dummy variables for the `year_f` column.
+
+## 5. Running $K$NN
+
+1. Split the dataframe into an 80/20 training and test set
+2. Use Caret to run a $K$NN model that uses our engineered features to predict province
+  - use 5-fold cross validated subsampling 
+  - allow Caret to try 15 different values for $K$
+3. Display the confusion matrix on the test data
+
+
+```{r}
+set.seed(505)
+wine_index <- createDataPartition(wino$province, p = 0.8, list = FALSE)
+train <- wino[ wine_index, ]
+test <- wino[-wine_index, ]
+
+fit <- train(province ~ .,
+            data = train, 
+            method = "knn",
+            tuneLength = 15,
+            metric = "Kappa",
+            trControl = trainControl(method = "cv", number = 5))
+
+confusionMatrix(predict(fit, test),factor(test$province))
+
+```
+
+- We set the seed for reproducibility
+- We split the data into training and test sets.
+- We use the `caret` package to train a $K$ NN model with 5-fold cross-validation.
+- We allow the model to try 15 different values for $K$.
+- We display the confusion matrix to evaluate the model's performance on the test data.
+
+
+## 6. Kappa
+
+How do we determine whether a Kappa value represents a good, bad or some other outcome?
+
+The Kappa statistic is a measure of inter-rater agreement or classification accuracy that takes into account the possibility of agreement occurring by chance. Here are the general guidelines for interpreting Kappa values:
+
+- **Kappa < 0**: No agreement
+- **Kappa = 0 - 0.20**: Slight agreement
+- **Kappa = 0.21 - 0.40**: Fair agreement
+- **Kappa = 0.41 - 0.60**: Moderate agreement
+- **Kappa = 0.61 - 0.80**: Substantial agreement
+- **Kappa = 0.81 - 1.00**: Almost perfect agreement
+
+These guidelines help determine whether the agreement between the predicted and actual classifications is good, bad, or somewhere in between.
+
+
+
+## 7. Improvement
+
+How can we interpret the confusion matrix, and how can we improve in our predictions?
+
+### Interpreting the Confusion Matrix
+
+The confusion matrix is a table that is used to evaluate the performance of a classification model. It compares the actual target values with the values predicted by the model. Here is how you can interpret the confusion matrix:
+
+- **True Positives (TP)**: The number of instances correctly predicted as the positive class.
+- **True Negatives (TN)**: The number of instances correctly predicted as the negative class.
+- **False Positives (FP)**: The number of instances incorrectly predicted as the positive class (Type I error).
+- **False Negatives (FN)**: The number of instances incorrectly predicted as the negative class (Type II error).
+
+From the confusion matrix, you can derive several important metrics:
+
+- **Accuracy**: The proportion of the total number of predictions that were correct.
+  \[
+  \text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+  \]
+
+- **Precision**: The proportion of positive predictions that were actually correct.
+  \[
+  \text{Precision} = \frac{TP}{TP + FP}
+  \]
+
+- **Recall (Sensitivity)**: The proportion of actual positives that were correctly identified.
+  \[
+  \text{Recall} = \frac{TP}{TP + FN}
+  \]
+
+- **F1 Score**: The harmonic mean of precision and recall.
+  \[
+  \text{F1 Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+  \]
+
+- **Kappa**: A measure of inter-rater agreement that takes into account the possibility of agreement occurring by chance.
+
+### Improving Predictions
+
+To improve the predictions of your model, consider the following strategies:
+
+1. **Feature Engineering**: Create new features or transform existing ones to better capture the underlying patterns in the data. For example, you can create interaction terms, polynomial features, or use domain knowledge to create meaningful features.
+
+2. **Hyperparameter Tuning**: Experiment with different hyperparameters to find the optimal settings for your model. For $K$NN, this includes trying different values of $K$.
+
+3. **Cross-Validation**: Use more folds or different cross-validation techniques to ensure the model generalizes well to unseen data. This helps in selecting the best model and avoiding overfitting.
+
+4. **Ensemble Methods**: Combine multiple models to improve prediction accuracy and robustness. Techniques like bagging, boosting, and stacking can help in creating a more robust model.
+
+5. **Data Augmentation**: If you have limited data, consider techniques to augment your dataset. This can include generating synthetic data, oversampling minority classes, or using data augmentation techniques specific to your domain.
+
+6. **Regularization**: Apply regularization techniques to prevent overfitting. Regularization methods like L1 (Lasso) and L2 (Ridge) can help in creating a more generalized model.
+
+7. **Model Selection**: Try different types of models to see which one performs best on your data. For example, you can compare $K$NN with decision trees, random forests, support vector machines, or neural networks.
