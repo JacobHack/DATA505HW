@@ -1,0 +1,206 @@
+---
+title: "HW4:Conditional Probability"
+author: "Jacob Plax"
+date: "02/17/2025"
+
+---
+
+**Abstract:**
+
+This is a technical blog post of **both** an HTML file *and* [.qmd file](https://raw.githubusercontent.com/cd-public/D505/refs/heads/master/hws/src/cond.qmd) hosted on GitHub pages.
+
+# 0. Quarto Type-setting
+
+- This document is rendered with Quarto, and configured to embed an images using the `embed-resources` option in the header.
+- If you wish to use a similar header, here's is the format specification for this document:
+
+```email
+format: 
+  html:
+    embed-resources: true
+```
+
+# 1. Setup
+
+**Step Up Code:**
+
+```{r}
+sh <- suppressPackageStartupMessages
+sh(library(tidyverse))
+sh(library(caret))
+wine <- readRDS(gzcon(url("https://github.com/cd-public/D505/raw/master/dat/pinot.rds")))
+```
+
+# 2. Conditional Probability
+
+Calculate the probability that a Pinot comes from Burgundy given it has the word 'fruit' in the description.
+
+$$
+P({\rm Burgundy}~|~{\rm Fruit})
+$$
+
+To calculate the conditional probability $( P(\text{Burgundy} \mid \text{Fruit}) )$, we can use the following formula:
+
+$[ P(\text{Burgundy} \mid \text{Fruit}) = \frac{P(\text{Fruit} \mid \text{Burgundy}) \cdot P(\text{Burgundy})}{P(\text{Fruit})} ]$
+
+```{r}
+# Calculate P(Burgundy)
+p_burgundy <- mean(wine$province == "Burgundy")
+
+# Calculate P(Fruit)
+p_fruit <- mean(grepl("fruit", wine$description, ignore.case = TRUE))
+
+# Calculate P(Fruit | Burgundy)
+p_fruit_given_burgundy <- mean(grepl("fruit", wine$description[wine$province == "Burgundy"], ignore.case = TRUE))
+
+# Calculate P(Burgundy | Fruit)
+p_burgundy_given_fruit <- (p_fruit_given_burgundy * p_burgundy) / p_fruit
+
+# Print the result
+p_burgundy_given_fruit
+```
+
+### Explanation of the Code 
+
+1. **Calculate P(Burgandy)**: The probability that a wine is from Burgundy
+2. **Calculate P(Fruit)**: The probability that a wine's description contains the word 'fruit'.
+3. **Calculate P(Fruit | Burgundy)**: The probability that a wine from Burgundy has the word 'fruit' in its description.
+4. **Calculate P(Burgundy | Fruit)**: The conditional probability that a wine is from Burgundy given it has the word 'fruit' in the description.
+5. **Print the results**: Print the calculated conditional probability.
+
+
+# 3. Naive Bayes Algorithm
+
+We train a naive bayes algorithm to classify a wine's province using:
+1. An 80-20 train-test split.
+2. Three features engineered from the description
+3. 5-fold cross validation.
+
+We report Kappa after using the model to predict provinces in the holdout sample.
+
+```{r}
+#Engineer features from the description
+wino <- wine %>% 
+    mutate(cherry = str_detect(description,"cherry")) %>% 
+    mutate(chocolate = str_detect(description,"chocolate")) %>%
+    mutate(earth = str_detect(description,"earth")) %>%
+    select(-description, year)
+
+#Split the Data into a 80-20 train-test split
+set.seed(505)
+wine_index <- createDataPartition(wino$province, p = 0.80, list = FALSE)
+train <- wino[ wine_index, ]
+test <- wino[-wine_index, ]
+
+#Train the model
+fit <- train(province ~ .,
+            data = train, 
+            method = "naive_bayes",
+            metric = "Kappa",
+            trControl = trainControl(method = "cv", number = 5))
+fit
+
+```
+
+
+### Explanation of the Code 
+
+1. **Engineer Features**: Create binary features indicating the pressent of the words `cheery`, `chocolate`, and `earth` in the description.
+2. **Split Data**: Split the data into an 80-20 train-test split.
+3. **Train Model**: Train a Naive Bayes model using the `caret` package with 5-fold cross validation and report the Kappa statistic. 
+
+# 4. Frequency Differences
+
+We find the three words that most distinguish New York Pinots from all other Pinots.
+
+```{r}
+# Load necessary libraries
+sh <- suppressPackageStartupMessages
+
+sh(library(tidytext))
+
+
+# Tokenize the descriptions
+wine_words <- wine %>%
+  unnest_tokens(word, description) %>%
+  anti_join(stop_words) %>%  # Remove stop words
+  filter(!word %in% c("wine", "pinot", "vineyard"))  # Remove common words
+
+# Calculate word frequencies for New York Pinots
+ny_words <- wine_words %>%
+  filter(province == "New_York") %>%
+  count(word, sort = TRUE) %>%
+  rename(ny_count = n)
+
+# Calculate word frequencies for all other Pinots
+other_words <- wine_words %>%
+  filter(province != "New_York") %>%
+  count(word, sort = TRUE) %>%
+  rename(other_count = n)
+
+# Combine the frequencies
+word_freq <- full_join(ny_words, other_words, by = "word") %>%
+  replace_na(list(ny_count = 0, other_count = 0))
+
+# Calculate the frequency difference
+word_freq <- word_freq %>%
+  mutate(freq_diff = ny_count - other_count)
+
+# Identify the top three words with the highest frequency differences
+top_words <- word_freq %>%
+  arrange(desc(freq_diff)) %>%
+  head(3)
+
+# Print the top three words using knitr::kable for better formatting
+knitr::kable(top_words, caption = "Top Three Words that Distinguish New York Pinots")
+```
+
+### Explanation of the Code
+
+1. **Load Libraries**: Ensure that the necessary libraries (`tidyverse` and `tidytext`) are loaded.
+2. **Tokenize Descriptions**: Convert the descriptions into individual words using `unnest_tokens`. Remove stop words and common words like "wine", "pinot", and "vineyard".
+3. **Calculate Word Frequencies**:
+    - For New York Pinots: Calculate the frequency of each word in New York Pinots.
+    - For All Other Pinots: Calculate the frequency of each word in all other Pinots.
+4. **Combine Frequencies**: Combine the word frequencies for New York Pinots and all other Pinots.
+5. **Calculate Frequency Difference**: Calculate the difference in word frequencies between New York Pinots and all other Pinots.
+6. **Identify Top Words**: Identify the top three words with the highest frequency differences.
+7. **Print Top Words**: Use `knitr::kable` to print the top three words in a nicely formatted table, ensuring that the `word` column is included in the output.
+
+
+
+# 5. Extension
+
+Calculate the variance of the logged word-frequency distributions for each province.
+
+```{r}
+
+# Tokenize the descriptions
+wine_words <- wine %>%
+  unnest_tokens(word, description) %>%
+  anti_join(stop_words) %>%  # Remove stop words
+  filter(!word %in% c("wine", "pinot", "vineyard"))  # Remove common words
+
+# Calculate word frequencies for each province
+word_freq_province <- wine_words %>%
+  count(province, word, sort = TRUE) %>%
+  group_by(province) %>%
+  mutate(log_freq = log1p(n))  # Apply log transformation
+
+# Calculate the variance of the logged word-frequency distributions for each province
+variance_province <- word_freq_province %>%
+  group_by(province) %>%
+  summarize(variance = var(log_freq))
+
+# Print the variance for each province using knitr::kable for better formatting
+knitr::kable(variance_province, caption = "Variance of Logged Word-Frequency Distributions for Each Province")
+```
+
+### Explanation of the Code
+
+
+1. **Tokenize Descriptions**: Convert the descriptions into individual words using `unnest_tokens`. Remove stop words and common words like "wine", "pinot", and "vineyard".
+2. **Calculate Word Frequencies**: Calculate the frequency of each word for each province.
+3. **Log Transform the Frequencies**: Apply a log transformation to the word frequencies using `log1p` (logarithm of 1 plus the frequency to handle zero counts).
+4. **Calculate Variance**: Calculate the variance of the logged word-frequency distributions for each province.
+5. **Print Variance**: Use `knitr::kable` to print the variance for each province in a nicely formatted table.
