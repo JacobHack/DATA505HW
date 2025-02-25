@@ -234,13 +234,15 @@ fit
 
 ## Summary 
 
-# 5. ROC Curves
-
 **Logistic Regression**: is a linear model that predicts the probability of a binary outcome using a logistic function. It is simple and interpretable but may not perform well with non-linear relationships.
 
 **K-NN**: is a non-parametric method that classifies a data point based on the majority class among its k-nearest neighbors. It is intuitive and works well with non-linear boundaries but can be computationally expensive for large datasets.
 
 **Naive Bayes**: is a probabilistic model based on Bayes' theorem with the assumption of feature independence. It is fast and works well with high-dimensional data but may not perform well if the independence assumption is violated.
+
+# 5. ROC Curves
+
+
 
 We can display an ROC for the model to explain your model's quality.
 

@@ -5388,13 +5388,13 @@ Resampling results:
 </section>
 <section id="summary" class="level2">
 <h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p><strong>Logistic Regression</strong>: is a linear model that predicts the probability of a binary outcome using a logistic function. It is simple and interpretable but may not perform well with non-linear relationships.</p>
+<p><strong>K-NN</strong>: is a non-parametric method that classifies a data point based on the majority class among its k-nearest neighbors. It is intuitive and works well with non-linear boundaries but can be computationally expensive for large datasets.</p>
+<p><strong>Naive Bayes</strong>: is a probabilistic model based on Bayes’ theorem with the assumption of feature independence. It is fast and works well with high-dimensional data but may not perform well if the independence assumption is violated.</p>
 </section>
 </section>
 <section id="roc-curves" class="level1">
 <h1>5. ROC Curves</h1>
-<p><strong>Logistic Regression</strong>: is a linear model that predicts the probability of a binary outcome using a logistic function. It is simple and interpretable but may not perform well with non-linear relationships.</p>
-<p><strong>K-NN</strong>: is a non-parametric method that classifies a data point based on the majority class among its k-nearest neighbors. It is intuitive and works well with non-linear boundaries but can be computationally expensive for large datasets.</p>
-<p><strong>Naive Bayes</strong>: is a probabilistic model based on Bayes’ theorem with the assumption of feature independence. It is fast and works well with high-dimensional data but may not perform well if the independence assumption is violated.</p>
 <p>We can display an ROC for the model to explain your model’s quality.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>prob <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit, <span class="at">newdata =</span> test, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)[,<span class="dv">2</span>]</span>
